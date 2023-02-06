@@ -1,2 +1,1 @@
-# PeerBrain
-A Decentralized Peer to Peer Social Network
+# Peer Brain - A Decentralized P2P Social Network App
