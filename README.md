@@ -15,3 +15,9 @@ Git is a distributed version control system. This means that each user has a loc
 ## How does the open-source workflow work?
 
 The open-source workflow is a process by which users can contribute to a project. It is typically done through a system like GitHub, where users can fork, or copy, a repository, make changes to it, and then submit a pull request. The project maintainers then review the changes and either accept or reject them. If accepted, the changes are merged into the main repository. This process allows for collaboration between users and for projects to be updated and improved quickly.
+
+# Resources
+
+Here are some resources about this project:
+
+https://youtu.be/GaQGfzTiHTc
