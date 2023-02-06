@@ -4,7 +4,7 @@ This open-source project implements a peer-to-peer social network app where user
 
 If you want to contribute, you can fork this repository and issue pull requests!
 
-## what are pull requests?
+## What are pull requests?
 
 A pull request is a feature of many version control systems, including Git, that enables users to request changes to a repository from another user. This process is sometimes referred to as a pull request workflow. It usually involves a user submitting a request to another user (or a group of users) to make changes to a project or repository. The other user reviews the changes and then either accepts or rejects them. Pull requests allow for collaboration between users, as well as for users to track the progress of changes to a project.
 
