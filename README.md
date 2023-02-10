@@ -2,7 +2,7 @@
 
 This open-source project implements a peer-to-peer social network app where users are represented as brain cells. It is completely decentralized and there is no central authority or recommendation algorithms, nor is there any censorship. Messages are propagated between users in a meritocratic way, and users have control over the strength of the signals they receive. This allows for more free and open communication between users.
 
-If you want to contribute, you can fork this repository and issue pull requests!
+If you want to contribute, you can fork this repository and issue pull requests! Feel free to use ChatGPT or OpenAI to help you with the coding.
 
 ## What are pull requests?
 
