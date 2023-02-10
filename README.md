@@ -21,3 +21,6 @@ The open-source workflow is a process by which users can contribute to a project
 Here are some resources about this project:
 
 https://youtu.be/GaQGfzTiHTc
+
+ARTICLE ON NAT HOLE PUNCHING
+https://bford.info/pub/net/p2pnat/
