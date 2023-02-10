@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 
 class User(BaseModel):
     username : str
-    key : str
     email : str
 
 class Thought(BaseModel):

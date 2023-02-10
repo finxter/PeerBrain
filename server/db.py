@@ -30,19 +30,20 @@ def get_user_by_email(email:str)->dict:
         return USERS.fetch({"email" : email}).items  
     except Exception as e:
         print(e)
+
+def get_users()->list:
+    return USERS.fetch().items
         
 def create_user(username:str, email:str)->None:
-    if not get_user_by_email(email) or not get_user_by_username(username):
-        new_user = User(username = username, key = str(uuid4()), email = email)
-        new_user_dict = new_user.dict()
-        
-        try:
-            USERS.put(new_user_dict)
-        except Exception as e:
-            print(e)
-    else:
-        return "A user with that username/email already exists!"
-
+    
+    new_user = {"username" : username, 
+                "key" : str(uuid4()), 
+                "email" : email}
+    try:
+        USERS.put(new_user)
+    except Exception as e:
+        print(e)
+    
 #---THOUGHTS FUNCTIONS---#
 def get_thoughts(username:str)->dict:
     user_id = get_user_by_username(username)[0]["key"]
