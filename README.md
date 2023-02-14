@@ -24,3 +24,5 @@ https://youtu.be/GaQGfzTiHTc
 
 ARTICLE ON NAT HOLE PUNCHING
 https://bford.info/pub/net/p2pnat/
+------------------------------------------------------------------------------------------------
+[![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)

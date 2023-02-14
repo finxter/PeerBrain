@@ -6,7 +6,7 @@ import os
 import json
 from passlib.context import CryptContext
 from datetime import datetime
-
+import math
 
 #---LOCAL IMPORTS---#
 from models import User, Thought
@@ -59,20 +59,34 @@ def gen_pw_hash(pw):
 
     
 #---THOUGHTS FUNCTIONS---#
-def get_thoughts(username:str)->dict:
-    user_id = get_user_by_username(username)[0]["key"]
+def update_rating(rating):
+    rating += math.log(rating+1)
+    return rating
+
+def get_thought(query_str:str):
     try:
-        return THOUGHTS.fetch({"user_id" : user_id}).items  
+        thought_list=THOUGHTS.fetch().items
+        for thought in thought_list:
+            if query_str.lower() in thought["title"].lower():
+                return thought
+            else:
+                return f"No thought found for the search term {query_str}"
     except Exception as e:
         print(e)
 
-def create_thought(user_id:str, title:str, content:str )->None:
-    new_thought = {"user_id" : user_id,
+def get_thoughts(username:str)->dict:
+    try:
+        return THOUGHTS.fetch({"username" : username}).items  
+    except Exception as e:
+        print(e)
+
+def create_thought(username:str, title:str, content:str )->None:
+    new_thought = {"username" : username,
                    "key" : str(uuid4()), 
                    "title" : title, 
                    "content" : content,
                    "rating" : 0.0,
-                   "creation_date": datetime.utcnow()
+                   "creation_date": str(datetime.utcnow())
                    }
     try:
         THOUGHTS.put(new_thought)
@@ -88,3 +102,4 @@ def create_thought(user_id:str, title:str, content:str )->None:
 # create_user("user", "tom.teck@msn.com", "test125")
 
 #print(get_users())
+print(get_thought("str"))
