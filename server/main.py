@@ -87,10 +87,16 @@ async def get_current_active_user(current_user: UserInDB = Depends(get_current_u
 
 #---ENDPOINTS---#
 
-#---UNAUTH ENDPOINTS---#
-@app.get("/")
-def read_root():
-    raise HTTPException(status_code=400, detail = "Calling on the root page is not allowed!")
+#Root route to get token
+@app.post("/", response_model=Token)
+async def login_for_access_token(form_data : OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= "Username/password incorrect!",
+                                         headers={"WWW-Authenticate":"Bearer"}) 
+    access_token_expires = timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(data={"sub" : user.username}, expires_delta=access_token_expires)
+    return {"access_token" : access_token, "token_type" : "bearer"}
 
 @app.post("/api/v1/users")
 async def register_user(user : User):
@@ -102,21 +108,15 @@ async def register_user(user : User):
     create_user(username, email)
     return {"Account creation" : "Successful"}
 
-@app.post("/token", response_model=Token)
-async def login_for_access_token(form_data : OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= "Username/password incorrect!",
-                                         headers={"WWW-Authenticate":"Bearer"}) 
-    access_token_expires = timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub" : user.username}, expires_delta=access_token_expires)
-    return {"access_token" : access_token, "token_type" : "bearer"}
-
 #---AUTH ENDPOINTS---#
 
 @app.get("/api/v1/users")
 async def get_all_users(current_user : User = Depends(get_current_active_user)):
     return get_users()
+
+@app.get("/api/v1/token-test")
+async def token_test(current_user : User = Depends(get_current_active_user)):
+    return {"Token Validity": "Verified"}
 
 @app.get("/api/v1/thoughts/{username}")
 async def get_thoughts_for_user(username : str, current_user : User = Depends(get_current_active_user)):
@@ -135,8 +135,6 @@ async def create_new_thought(thought : Thought, current_user : User = Depends(ge
     create_thought(current_user.username, title, content)
     
     return {"Thought" : "Successfully created!"}
-
-#---log in to get access token---#
 
 @app.get("/api/v1/me", response_model=User)
 async def read_users_me(current_user : User = Depends(get_current_active_user)):

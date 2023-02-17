@@ -1,1 +1,5 @@
 .env
+token.json 
+.pem
+.gitignore
+client/private_key.pem
