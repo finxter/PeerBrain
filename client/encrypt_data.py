@@ -52,7 +52,7 @@ def upload_public_key(public_key:bytes, username:str)->Union[bool, None]:
     try:
         KEYS.put(pub_key)
     except Exception as error_message:
-        print(error_message)
+        logging.exception(error_message)
         
     try:
         retrieved_key = get_public_key(username)
@@ -63,12 +63,12 @@ def upload_public_key(public_key:bytes, username:str)->Union[bool, None]:
             print("Public key upload corrupted, please try again!")
             return False
     except Exception as error_message:
-        print(error_message)
+        logging.exception(error_message)
         return None
 
 #Detect if a private key is available on your system        
 def detect_private_key()->bool:
-    if os.path.exists("private_key.pem"):
+    if os.path.exists(os.path.join(os.path.dirname(__file__), 'keys', 'private_key.pem')):
         print("Found local private key.")
         return True
     else:
@@ -78,7 +78,8 @@ def detect_private_key()->bool:
 #Load your private key after checking if one is available on your system    
 def load_private_key():
     if detect_private_key:
-        with open('private_key.pem', 'rb') as f:
+        key_path = os.path.join(os.path.dirname(__file__), 'keys', 'private_key.pem')
+        with open(key_path, 'rb') as f:
             key_data = f.read()
             key = serialization.load_pem_private_key(
             key_data,
@@ -92,7 +93,8 @@ def load_private_key():
     
 #Save private key to local storage
 def save_private_key(private_key)->None:
-    with open('private_key.pem', 'wb') as f:
+    key_path = os.path.join(os.path.dirname(__file__), 'keys', 'private_key.pem')
+    with open(key_path, 'wb') as f:
         f.write(private_key)
         
     reloaded_key = load_private_key()
@@ -101,17 +103,18 @@ def save_private_key(private_key)->None:
     else:
         print("Private key not saved successfully, please try again!")
 
-def encrypt_message_symmetrical(message:str)->bytes:
-    # Generate a random symmetric encryption key
-    symmetric_key = Fernet.generate_key()
-    # Create a Fernet object using the key
-    fernet = Fernet(symmetric_key)
-    # Encrypt the text string
-    encrypted_text = fernet.encrypt(message.encode())
-    return symmetric_key, encrypted_text
+def encrypt_message_symmetrical(message:str)-> bytes:
+    try:
+        symmetric_key = load_symmetric_key()
+        # Create a Fernet object using the key
+        fernet = Fernet(symmetric_key)
+        # Encrypt the text string
+        encrypted_text = fernet.encrypt(message.encode())
+        return symmetric_key, encrypted_text
+    except Exception as error_message:
+        logging.exception(error_message)
 
-
-def wrap_encrypt_sym_key(sym_key:bytes, username:str):
+def wrap_encrypt_sym_key(sym_key:bytes, username:str)->Union[str, bytes]:
     """Function to prepare the public key to encrypt the symmetric key, and then encrypt it"""
     public_key = serialization.load_pem_public_key(get_public_key(username))
     # Encrypt the symmetric key with the client's public key
@@ -120,7 +123,7 @@ def wrap_encrypt_sym_key(sym_key:bytes, username:str):
             algorithm=hashes.SHA256(),
             label=None
         ))
-    return encrypted_sim_key
+    return username, encrypted_sim_key
 
 def decrypt_message(encrypted_message, encryption_sim_key):
     private_key = serialization.load_pem_private_key(
@@ -146,12 +149,41 @@ def decrypt_message(encrypted_message, encryption_sim_key):
     print(decrypted_message)
     return decrypted_message
 
-# private_key_test = load_private_key()
-# public_key_test = get_public_key("tom")
+def load_sym_key()->bytes:
+     # Load the key from a file
+    key_path = os.path.join(os.path.dirname(__file__), 'keys', 'message.key')
+    with open(key_path, 'rb') as key_file:
+        key = key_file.read()
+        return key
+
+def generate_sym_key()->None:
+    # Generate a symmetric key
+    key = Fernet.generate_key()
+
+    # Save the key to a file
+    key_path = os.path.join(os.path.dirname(__file__), 'keys', 'message.key')
+    with open(key_path, 'wb') as key_file:
+        key_file.write(key)
+
+    if load_sym_key() == key:
+        print("Symmetric key saved successfully")
+    else:
+        print("Symmetric key not saved successfully, please try again!")
+
+        
+    
+def detect_sym_key()->bool:
+    if os.path.exists(os.path.join(os.path.dirname(__file__), 'keys', 'message.key')):
+        print("Found local sym key.")
+        return True
+    else:
+        print("No local private sym found.")
+        return False
 
 
-#print(encrypt_message_symmetrical("this is a testmessage"))
 
+
+    
 
 
 

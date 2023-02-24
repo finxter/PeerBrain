@@ -4,8 +4,10 @@ import os
 import json
 import requests
 
+
 from encrypt_data import generate_keypair, get_public_key, load_private_key, upload_public_key, detect_private_key, \
-    save_private_key, encrypt_message_symmetrical, wrap_encrypt_sym_key, decrypt_message
+    save_private_key, encrypt_message_symmetrical, wrap_encrypt_sym_key, decrypt_message, generate_sym_key, load_sym_key, \
+        detect_sym_key
 
 #---VARIABLES---#
 login_headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -90,10 +92,7 @@ def get_account_info(server_url:str)->None:
     response = requests.get(f"{server_url}{account_url_suffix}", headers=headers, timeout=10)
     data = response.json()
 
-    print("---YOUR ACCOUNT DETAILS---")
-    print()
-    print(f"Username : {data['username']}")
-    print(f"Email : {data['email']}")
+    return data['username'], data['email']
 
 def get_all_users(server_url:str)->None:
     """Development function to get all users in the database. Will be deprecated on app release."""
@@ -102,7 +101,8 @@ def get_all_users(server_url:str)->None:
     headers = {"Authorization": f"Bearer {get_token()}"}
 
     response = requests.get(f"{server_url}{account_url_suffix}", headers=headers, timeout=10)
-
+    
+        
     data = response.json()
 
 
@@ -111,8 +111,34 @@ def get_all_users(server_url:str)->None:
         print(key)
         print(value)
 
+def get_user_friends(server_url:str)->None:
+    """function to return a list of all user friends."""
+    account_url_suffix = "api/v1/friends"
+
+    headers = {"Authorization": f"Bearer {get_token()}"}
+
+    response = requests.get(f"{server_url}{account_url_suffix}", headers=headers, timeout=10)
+
+    data = response.json()
 
 
+    print("---Friends---")
+    for key, value in data.items():
+        print(key)
+        print(value)
+
+def add_user_friends(server_url:str, friend_username:str):
+    """function to return a list of all user friends."""
+    account_url_suffix = "api/v1/friends/"
+
+    headers = {"Authorization": f"Bearer {get_token()}"}
+
+    response = requests.post(f"{server_url}{account_url_suffix}{friend_username}", headers=headers, timeout=10)
+
+    data = response.json()
+    for key, value in data.items():
+        print(key)
+        print(value)
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     server_url = "http://127.0.0.1:8000/"
@@ -130,24 +156,84 @@ def main():
     print("Please select what you want to do from the menu below.")
 
     while True:
+        
+        print("\nMAIN MENU:")
+        print()
         print("\nPlease choose an option:")
         print()
-        print("1. Log in to the current server.")
-        print("2. Check your account details.")
-        print("3. Change server.")
-        print("4. Get all users.")
-        print("5. Exit")
+        print("1. TECHNICAL ACTIONS")
+        print("2. ACCOUNT ACTIONS")
+        print("Q to exit")
 
         choice = input(">> ")
+        
         if choice == "1":
-            login(server_url)
+            while True:
+                print("\TECHNICAL MENU:")
+                print()
+                print("\nPlease choose an option:")
+                print()
+                print("1. Log in to the current server.")
+                print("2. Change server.")
+                print("3. Get all users.")
+                print("4. Generate SSH Keypair and symmetrical key(needed to create and read messages/tweets)")
+                print("B to return to main menu")
+                
+                sub_choice = input(">> ")
+                if sub_choice == "1":
+                    login(server_url)
+                elif sub_choice == "2":
+                    server_url = input("Please enter a new url: ")
+                elif sub_choice == "3":
+                    get_all_users(server_url)
+                elif sub_choice == "5":
+                    if detect_private_key() and detect_sym_key():
+                        print()
+                        print("Keys already exist, overwriting them will make your account irretrievable!!")
+                        print()
+                        print("Key creation canceled!")
+                    else:    
+                        public_key, private_key = generate_keypair()
+                        save_private_key(private_key)
+                        upload_public_key(public_key, get_account_info(server_url)[0])
+                        generate_sym_key()
+                elif sub_choice == "B" or sub_choice=="b":
+                    print("Returning to main menu...")
+                    break        
+                else:
+                    print("Invalid choice")        
         elif choice == "2":
-            get_account_info(server_url)
-        elif choice == "3":
-            server_url = input("Please enter a new url: ")
-        elif choice == "4":
-            get_all_users(server_url)
-        elif choice == "5":
+            while True:
+                print("\ACCOUNT MENU:")
+                print()
+                print("\nPlease choose an option:")
+                print()
+                print("1. Check your account details.")
+                print("2. Create a message")
+                print("3. Add a friend")
+                print("4. Check friends list")
+                print("B to return to main menu")
+                
+                sub_choice = input(">> ")
+                if sub_choice == "1":
+                    username, email = get_account_info(server_url)
+                    print("---YOUR ACCOUNT DETAILS---")
+                    print()
+                    print(f"Username : {username}")
+                    print(f"Email : {email}")
+                elif sub_choice == "2":
+                    pass
+                elif sub_choice == "3":
+                    friend_username = input("Enter your friend's username:")
+                    add_user_friends(server_url, friend_username)
+                elif sub_choice == "4":
+                    get_user_friends(server_url)
+                elif sub_choice == "B" or sub_choice=="b":
+                    print("Returning to main menu...")
+                    break        
+                else:
+                    print("Invalid choice")    
+        elif choice == "Q" or choice=="q":
             print("Goodbye!")
             break
         else:
@@ -156,25 +242,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-#     def register_presence(self, messages):
-#         """ Register the client's presence with the tracker and the messages it has available """
-#         response = requests.post(f'{self.tracker_url}/register', json={'messages': messages})
-#         response.raise_for_status()
-
-#     def request_peers(self, message_id):
-#         """ Request information about peers that have a specific message """
-#         response = requests.get(f'{self.tracker_url}/peers/{message_id}')
-#         response.raise_for_status()
-#         self.peers = response.json()['peers']
-
-#     def download_message(self, message_id):
-#         """ Download a message from a peer """
-#         for peer in self.peers:
-#             try:
-#                 response = requests.get(f'{peer}/messages/{message_id}')
-#                 if response.status_code == 200:
-#                     return response.text
-#             except requests.RequestException:
-#                 continue
-#         raise Exception(f"Message {message_id} not found on any peers")

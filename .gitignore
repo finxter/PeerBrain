@@ -3,3 +3,9 @@ token.json
 .pem
 .gitignore
 client/private_key.pem
+client/keys/private_key.pem
+client/keys/message.key
+client/todo.md
+.kanbn/index.md
+.kanbn/tasks/add-thought-to-client-app.md
+.kanbn/tasks/

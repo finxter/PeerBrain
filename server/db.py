@@ -3,6 +3,7 @@ from datetime import datetime
 import math
 from typing import Union
 import os
+import logging
 from pprint import pprint #pylint: disable=unused-import
 from uuid import uuid4
 from deta import Deta
@@ -26,25 +27,62 @@ THOUGHTS = deta.Base("thoughts")
 pwd_context = CryptContext(schemes =["bcrypt"], deprecated="auto")
 
 #---USER FUNCTIONS---#
-def get_user_by_username(username:str)->Union[dict, None]:
-    try:
-        return USERS.fetch({"username" : username}).items
-    except Exception as error_message:
-        print(error_message)
-        return None
-
-def get_user_by_email(email:str)->Union[dict, None]:
-    try:
-        return USERS.fetch({"email" : email}).items
-    except Exception as error_message:
-        print(error_message)
-        return None
-
 def get_users()->dict:
     user_dict = {}
     for user in USERS.fetch().items:
         user_dict[user["username"]]=user
     return user_dict
+
+def get_user_by_username(username:str)->Union[dict, None]:
+    try:
+        return USERS.fetch({"username" : username}).items[0]
+    except Exception as error_message:
+        logging.exception(error_message)
+        return None
+
+def get_friends_by_username(username:str)->Union[dict, None]:
+    friends_list =[]
+    try:
+        friends_list = USERS.fetch({"username" : username}).items[0]["friends"]
+        friends_dict = {}
+        for friend in friends_list:
+            user = get_user_by_username(friend)
+            friends_dict[user['username']] = {"email":user['email']}
+        return friends_dict    
+    except Exception as error_message:
+        logging.exception(error_message)
+        return None
+    
+def add_friend(username, friend_username):
+    update= {"friends": USERS.util.append(friend_username) }
+    
+    try:
+        user = get_user_by_username(username)
+        user_key = user["key"]
+        if not friend_username in get_users():
+            return {"Username" : "Not Found"}
+        elif username == friend_username:
+            return{"Username" : "You can't add yourself as a friend!"}
+        elif friend_username in user["friends"]:
+            return {"Username" : "Already a friend!"}
+        else:
+            
+            return USERS.update(update, user_key), f"User {friend_username} added as a friend successfully!"
+    except Exception as error_message:
+        logging.exception(error_message)
+        return None
+    
+    
+       
+    
+def get_user_by_email(email:str)->Union[dict, None]:
+    try:
+        return USERS.fetch({"email" : email}).items[0]
+    except Exception as error_message:
+        logging.exception(error_message)
+        return None
+
+
 
 def create_user(username:str, email:str, pw_to_hash:str)->None:
 
@@ -56,7 +94,7 @@ def create_user(username:str, email:str, pw_to_hash:str)->None:
     try:
         USERS.put(new_user)
     except Exception as error_message:
-        print(error_message)
+        logging.exception(error_message)
 
 def gen_pw_hash(pw:str)->str:
     return pwd_context.hash(pw)
@@ -76,14 +114,14 @@ def get_thought(query_str:str)->Union[dict, str, None]:
             else:
                 return f"No thought found for the search term {query_str}"
     except Exception as error_message:
-        print(error_message)
+        logging.exception(error_message)
         return None
 
 def get_thoughts(username:str)->Union[dict, None]:
     try:
         return THOUGHTS.fetch({"username" : username}).items
     except Exception as error_message:
-        print(error_message)
+        logging.exception(error_message)
         return None
 
 def create_thought(username:str, title:str, content:str )->None:
@@ -97,4 +135,7 @@ def create_thought(username:str, title:str, content:str )->None:
     try:
         THOUGHTS.put(new_thought)
     except Exception as error_message:
-        print(error_message)
+        logging.exception(error_message)
+
+
+

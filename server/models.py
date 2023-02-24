@@ -1,16 +1,23 @@
 """Below we will define the necessary pydantic models to use in our application."""
 from uuid import UUID, uuid4
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel #pylint: disable=no-name-in-module
+from typing import Optional, List
+from pydantic import BaseModel, EmailStr #pylint: disable=no-name-in-module
 
 class User(BaseModel): # pylint: disable=too-few-public-methods
-    """Class to define the User object for our application. This will get updatet
+    """Class to define the User object for our application. This will get updated
     and more complex as development continues."""
     username: str
     key: Optional[UUID] = uuid4()
-    email: str or None = None
-    disabled: bool or None = None
+    email: EmailStr
+    user_password : Optional[str]
+    disabled: bool = False
+    friends: List[str] = []
+
+class Reader(BaseModel): # pylint: disable=too-few-public-methods
+    """Helper class for the message creation process."""
+    username: str or None = None
+    encrypted_sym_key: bytes or None = None
 
 class Thought(BaseModel): # pylint: disable=too-few-public-methods
     """Thoughts are Brainwave's equivalent of tweets. Their rating will determine popularity
@@ -21,6 +28,7 @@ class Thought(BaseModel): # pylint: disable=too-few-public-methods
     key: Optional[UUID] = uuid4()
     title: str
     content: str
+    readers: List[Reader]
     rating: Optional[float] = 0.0
     creation_date: Optional[datetime]
 
@@ -36,3 +44,4 @@ class TokenData(BaseModel): # pylint: disable=too-few-public-methods
 class UserInDB(User): # pylint: disable=too-few-public-methods
     """Helper class for the authentication process."""
     hashed_pw: str
+    #user_password: Optional[str] = None

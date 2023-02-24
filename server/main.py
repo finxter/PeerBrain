@@ -10,7 +10,8 @@ import os
 
 #---LOCAL IMPORTS---#
 from models import User, Thought, Token, TokenData, UserInDB
-from db import get_thoughts, get_users, create_user, get_user_by_email, get_user_by_username, create_thought, get_thought
+from db import get_thoughts, get_users, create_user, get_user_by_email, get_user_by_username, create_thought, get_thought, \
+    get_friends_by_username, add_friend
 
 #---LOAD ENV VARS---#
 load_dotenv()
@@ -24,6 +25,8 @@ oauth_2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 #---APP INIT---#
 app = FastAPI()
+
+
 
 #---DB INIT FROM DB MODULE---#
 db = get_users()
@@ -89,6 +92,7 @@ async def get_current_active_user(current_user: UserInDB = Depends(get_current_u
 
 #Root route to get token
 @app.post("/", response_model=Token)
+@app.post("/token", response_model=Token)
 async def login_for_access_token(form_data : OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
@@ -102,10 +106,11 @@ async def login_for_access_token(form_data : OAuth2PasswordRequestForm = Depends
 async def register_user(user : User):
     username  = user.username
     email = user.email
+    user_password = user.user_password
     
     if get_user_by_email(email) or get_user_by_username(username):
         raise HTTPException(status_code=400, detail="A user with that username/email already exists.")
-    create_user(username, email)
+    create_user(username, email, user_password)
     return {"Account creation" : "Successful"}
 
 #---AUTH ENDPOINTS---#
@@ -126,13 +131,22 @@ async def get_thoughts_for_user(username : str, current_user : User = Depends(ge
 async def get_thought(query_str : str, current_user : User = Depends(get_current_active_user)):
     return get_thought(query_str)
 
+@app.get("/api/v1/friends")
+async def get_friends( current_user : User = Depends(get_current_active_user)):
+    return get_friends_by_username(current_user.username)
+
+@app.post("/api/v1/friends/{friend_username}")
+async def get_friends( friend_username: str, current_user : User = Depends(get_current_active_user)):
+    return add_friend(current_user.username, friend_username)
+
 @app.post("/api/v1/thoughts")
 async def create_new_thought(thought : Thought, current_user : User = Depends(get_current_active_user)):
     #user_id = thought.user_id
     title = thought.title
     content = thought.content
+    readers = thought.readers
     
-    create_thought(current_user.username, title, content)
+    create_thought(current_user.username, title, content, readers)
     
     return {"Thought" : "Successfully created!"}
 
