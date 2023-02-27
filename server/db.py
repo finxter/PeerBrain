@@ -27,6 +27,10 @@ THOUGHTS = deta.Base("thoughts")
 pwd_context = CryptContext(schemes =["bcrypt"], deprecated="auto")
 
 #---USER FUNCTIONS---#
+def gen_pw_hash(pw:str)->str:
+    return pwd_context.hash(pw)
+
+
 def get_users()->dict:
     user_dict = {}
     for user in USERS.fetch().items:
@@ -35,11 +39,25 @@ def get_users()->dict:
 
 def get_user_by_username(username:str)->Union[dict, None]:
     try:
-        return USERS.fetch({"username" : username}).items[0]
+        if (USERS.fetch({"username" : username}).items) == []:
+            return {"Username" : "No user with username found"}
+        else:
+            return USERS.fetch({"username" : username}).items[0]
     except Exception as error_message:
         logging.exception(error_message)
         return None
 
+
+def get_user_by_email(email:str)->Union[dict, None]:
+    try:
+        if (USERS.fetch({"email" : email}).items) == []:
+            return {"Email" : "No user with email found"}
+        else:
+            return USERS.fetch({"email" : email}).items[0]
+    except Exception as error_message:
+        logging.exception(error_message)
+        return None
+    
 def get_friends_by_username(username:str)->Union[dict, None]:
     friends_list =[]
     try:
@@ -73,16 +91,22 @@ def add_friend(username, friend_username):
         return None
     
     
-       
+def change_password(username, pw_to_hash):
+    hashed_pw = gen_pw_hash(pw_to_hash)
+    update= {"hashed_pw": hashed_pw }
     
-def get_user_by_email(email:str)->Union[dict, None]:
     try:
-        return USERS.fetch({"email" : email}).items[0]
+        user = get_user_by_username(username)
+        user_key = user["key"]
+        if not username in get_users():
+            return {"Username" : "Not Found"}
+        else:
+            
+            return USERS.update(update, user_key), f"User {username} password changed!"
     except Exception as error_message:
         logging.exception(error_message)
-        return None
-
-
+        return None       
+    
 
 def create_user(username:str, email:str, pw_to_hash:str)->None:
 
@@ -90,14 +114,13 @@ def create_user(username:str, email:str, pw_to_hash:str)->None:
                 "key" : str(uuid4()),
                 "hashed_pw" : gen_pw_hash(pw_to_hash), 
                 "email" : email,
+                "friends" : [],
                 "disabled" : False}
     try:
+        print(gen_pw_hash(pw_to_hash))
         USERS.put(new_user)
     except Exception as error_message:
         logging.exception(error_message)
-
-def gen_pw_hash(pw:str)->str:
-    return pwd_context.hash(pw)
 
 
 #---THOUGHTS FUNCTIONS---#

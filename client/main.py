@@ -3,6 +3,9 @@ import getpass
 import os
 import json
 import requests
+from typing import List
+from uuid import uuid4
+
 
 
 from encrypt_data import generate_keypair, get_public_key, load_private_key, upload_public_key, detect_private_key, \
@@ -123,6 +126,7 @@ def get_user_friends(server_url:str)->None:
 
 
     print("---Friends---")
+   
     for key, value in data.items():
         print(key)
         print(value)
@@ -132,112 +136,176 @@ def add_user_friends(server_url:str, friend_username:str):
     account_url_suffix = "api/v1/friends/"
 
     headers = {"Authorization": f"Bearer {get_token()}"}
-
+    
     response = requests.post(f"{server_url}{account_url_suffix}{friend_username}", headers=headers, timeout=10)
 
     data = response.json()
+    print("---------------------------")
+    print(f"Trying to add {friend_username} as a friend. RESULT : {data}")
+    print("---------------------------")
+
+def register_user(server_url:str, username:str, user_email:str, user_password:str, friends:List[str]=[]):
+    """function to return a list of all user friends."""
+    account_url_suffix = "api/v1/users"
+
+    
+
+    payload = {
+    'username': username,
+    'email': user_email,
+    'user_password': user_password,
+    "friends" : friends,
+    "disabled" : False
+    
+    }
+    
+    print(payload)
+    response = requests.post(f"{server_url}{account_url_suffix}", json=payload, timeout=10)
+
+    data = response.json()
     for key, value in data.items():
-        print(key)
-        print(value)
+        print("---------------------------")
+        print(f"{key} {value}")
+        print("---------------------------")
+        
 def main():
     """Display the main menu and prompt the user to choose an option."""    
+    
     server_url = "http://127.0.0.1:8000/"
+    authenticated = False
 
     print()
     print("Welcome to version 0.1 of the Brainwaves P2P client!")
-    print()
+    print("-------------------------------------------------------------------")
     print(f"The currently set server url is {server_url}")
-    print()
-    # if get_token():
-    #     print("There is a token available.")
-    # else:
-    #     print("No token found, please login first.")
+    print("-------------------------------------------------------------------")
     print()
     print("Please select what you want to do from the menu below.")
 
-    while True:
-        
-        print("\nMAIN MENU:")
-        print()
-        print("\nPlease choose an option:")
-        print()
-        print("1. TECHNICAL ACTIONS")
-        print("2. ACCOUNT ACTIONS")
-        print("Q to exit")
-
-        choice = input(">> ")
-        
-        if choice == "1":
-            while True:
-                print("\TECHNICAL MENU:")
-                print()
-                print("\nPlease choose an option:")
-                print()
-                print("1. Log in to the current server.")
-                print("2. Change server.")
-                print("3. Get all users.")
-                print("4. Generate SSH Keypair and symmetrical key(needed to create and read messages/tweets)")
-                print("B to return to main menu")
-                
-                sub_choice = input(">> ")
-                if sub_choice == "1":
+    #MENU SHOWING WHILE WE ARE NOT LOGGED IN OR AUTHENTICATED WITH TOKEN
+    if not authenticated:
+        while authenticated == False:
+            print("1. Log in to the current server.")
+            print("2. Register account on the current server")
+            print("3. Change server.")
+            print("Q to exit")
+            choice = input(">> ")
+            
+            if choice == "1":
+                try:
                     login(server_url)
-                elif sub_choice == "2":
-                    server_url = input("Please enter a new url: ")
-                elif sub_choice == "3":
-                    get_all_users(server_url)
-                elif sub_choice == "5":
-                    if detect_private_key() and detect_sym_key():
-                        print()
-                        print("Keys already exist, overwriting them will make your account irretrievable!!")
-                        print()
-                        print("Key creation canceled!")
-                    else:    
-                        public_key, private_key = generate_keypair()
-                        save_private_key(private_key)
-                        upload_public_key(public_key, get_account_info(server_url)[0])
-                        generate_sym_key()
-                elif sub_choice == "B" or sub_choice=="b":
-                    print("Returning to main menu...")
-                    break        
+                    authenticated = True
+                except KeyError:
+                    print("---")
+                    print("Username/Password incorrect")
+                    print("---")
+            elif choice == "2":
+                username = input("Enter your username: ")
+                user_email = input("Enter your email address: ")
+                user_password = getpass.getpass(prompt = "Please enter a password: ")
+                confirm_password = getpass.getpass(prompt = "Confirm your password: ")
+                if user_password == confirm_password:
+                    register_user(server_url, username, user_email, user_password)
                 else:
-                    print("Invalid choice")        
-        elif choice == "2":
-            while True:
-                print("\ACCOUNT MENU:")
-                print()
-                print("\nPlease choose an option:")
-                print()
-                print("1. Check your account details.")
-                print("2. Create a message")
-                print("3. Add a friend")
-                print("4. Check friends list")
-                print("B to return to main menu")
+                    print("Passwords do not match!")
+            elif choice == "3":
+                server_url = input("Please enter a new url: ")
+            elif choice == "Q" or choice=="q":
+                break
+            else:
+                print("Invalid choice")    
                 
-                sub_choice = input(">> ")
-                if sub_choice == "1":
-                    username, email = get_account_info(server_url)
-                    print("---YOUR ACCOUNT DETAILS---")
+    #MENU SHOWING WHILE WE LOGGED IN OR AUTHENTICATED WITH TOKEN       
+    if authenticated:        
+        while True:
+            
+            print("\nMAIN MENU:")
+            print()
+            print("\nPlease choose an option:")
+            print()
+            print("1. TECHNICAL ACTIONS")
+            print("2. ACCOUNT ACTIONS")
+            print("3. LOG OUT")
+            print("Q to exit")
+
+            choice = input(">> ")
+            
+            if choice == "1":
+                while True:
+                    print("\TECHNICAL MENU:")
                     print()
-                    print(f"Username : {username}")
-                    print(f"Email : {email}")
-                elif sub_choice == "2":
-                    pass
-                elif sub_choice == "3":
-                    friend_username = input("Enter your friend's username:")
-                    add_user_friends(server_url, friend_username)
-                elif sub_choice == "4":
-                    get_user_friends(server_url)
-                elif sub_choice == "B" or sub_choice=="b":
-                    print("Returning to main menu...")
-                    break        
+                    print("\nPlease choose an option:")
+                    print()
+                    print("1. Get all users.")
+                    print("2. Generate SSH Keypair and symmetrical key(needed to create and read messages/tweets)")
+                    print("B to return to main menu")
+                    
+                    sub_choice = input(">> ")
+                    
+                    if sub_choice == "1":
+                        get_all_users(server_url)
+                    elif sub_choice == "2":
+                        if detect_private_key() and detect_sym_key():
+                            print()
+                            print("Keys already exist, overwriting them will make your account irretrievable!!")
+                            print()
+                            print("Key creation canceled!")
+                        else:    
+                            public_key, private_key = generate_keypair()
+                            save_private_key(private_key)
+                            upload_public_key(public_key, get_account_info(server_url)[0])
+                            generate_sym_key()
+                    elif sub_choice == "B" or sub_choice=="b":
+                        print("Returning to main menu...")
+                        break        
+                    else:
+                        print("Invalid choice")        
+            elif choice == "2":
+                while True:
+                    print("\ACCOUNT MENU:")
+                    print()
+                    print("\nPlease choose an option:")
+                    print()
+                    print("1. Check your account details.")
+                    print("2. Create a message")
+                    print("3. Add a friend")
+                    print("4. Check friends list")
+                    print("B to return to main menu")
+                    
+                    sub_choice = input(">> ")
+                    if sub_choice == "1":
+                        username, email = get_account_info(server_url)
+                        print("---YOUR ACCOUNT DETAILS---")
+                        print()
+                        print(f"Username : {username}")
+                        print(f"Email : {email}")
+                    elif sub_choice == "2":
+                        print("Message creation function here")
+                        pass
+                    elif sub_choice == "3":
+                        friend_username = input("Enter your friend's username:")
+                        add_user_friends(server_url, friend_username)
+                    elif sub_choice == "4":
+                        get_user_friends(server_url)
+                    elif sub_choice == "B" or sub_choice=="b":
+                        print("Returning to main menu...")
+                        break        
+                    else:
+                        print("Invalid choice")
+            elif choice == "3":
+                file_path = "token.json"  
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    print("Logged out successfully!")
+                    authenticated == False
+                    break
                 else:
-                    print("Invalid choice")    
-        elif choice == "Q" or choice=="q":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please try again.")
+                    print("You are not logged in!")    
+            elif choice == "Q" or choice=="q":
+                print("Goodbye!")
+                break
+            else:
+                print("Invalid choice. Please try again.")
 
 if __name__ == "__main__":
     main()

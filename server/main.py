@@ -7,11 +7,12 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 import os
+import bcrypt
 
 #---LOCAL IMPORTS---#
 from models import User, Thought, Token, TokenData, UserInDB
 from db import get_thoughts, get_users, create_user, get_user_by_email, get_user_by_username, create_thought, get_thought, \
-    get_friends_by_username, add_friend
+    get_friends_by_username, add_friend, gen_pw_hash, change_password
 
 #---LOAD ENV VARS---#
 load_dotenv()
@@ -35,6 +36,9 @@ db = get_users()
 def verify_password(plain_text_pw, hash_pw):
     return pwd_context.verify(plain_text_pw, hash_pw)
 
+def verify_password_hashing(plain_password, hashed_password):
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
 def get_user(db, username:str):
     if username in db:
         user_data = db[username]
@@ -54,7 +58,7 @@ def create_access_token(data:dict, expires_delta:timedelta or None = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow()() + timedelta(minutes = 60)
+        expire = datetime.utcnow() + timedelta(minutes = 60)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm = ALGORITHM)
@@ -108,8 +112,10 @@ async def register_user(user : User):
     email = user.email
     user_password = user.user_password
     
-    if get_user_by_email(email) or get_user_by_username(username):
-        raise HTTPException(status_code=400, detail="A user with that username/email already exists.")
+    print(get_user_by_email(email))
+    print(get_user_by_username(username))
+    # if get_user_by_email(email) or get_user_by_username(username):
+    #     raise HTTPException(status_code=400, detail="A user with that username/email already exists.")
     create_user(username, email, user_password)
     return {"Account creation" : "Successful"}
 
@@ -136,7 +142,7 @@ async def get_friends( current_user : User = Depends(get_current_active_user)):
     return get_friends_by_username(current_user.username)
 
 @app.post("/api/v1/friends/{friend_username}")
-async def get_friends( friend_username: str, current_user : User = Depends(get_current_active_user)):
+async def add_friends( friend_username: str, current_user : User = Depends(get_current_active_user)):
     return add_friend(current_user.username, friend_username)
 
 @app.post("/api/v1/thoughts")
@@ -153,3 +159,5 @@ async def create_new_thought(thought : Thought, current_user : User = Depends(ge
 @app.get("/api/v1/me", response_model=User)
 async def read_users_me(current_user : User = Depends(get_current_active_user)):
     return current_user
+
+
