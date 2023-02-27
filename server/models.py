@@ -45,3 +45,8 @@ class UserInDB(User): # pylint: disable=too-few-public-methods
     """Helper class for the authentication process."""
     hashed_pw: str
     #user_password: Optional[str] = None
+
+class PubKey(BaseModel): # pylint: disable=too-few-public-methods
+    """Class defining our pub key"""
+    pub_key: str
+    

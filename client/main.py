@@ -3,12 +3,10 @@ import getpass
 import os
 import json
 import requests
-from typing import List
+from typing import List, Union
 from uuid import uuid4
 
-
-
-from encrypt_data import generate_keypair, get_public_key, load_private_key, upload_public_key, detect_private_key, \
+from encrypt_data import generate_keypair, load_private_key, detect_private_key, \
     save_private_key, encrypt_message_symmetrical, wrap_encrypt_sym_key, decrypt_message, generate_sym_key, load_sym_key, \
         detect_sym_key
 
@@ -97,6 +95,49 @@ def get_account_info(server_url:str)->None:
 
     return data['username'], data['email']
 
+def get_public_key(server_url:str)->Union[bytes, None]:
+    """Function that returns account public key for the endpoint specified in the 
+    account_url_suffix variable"""
+    try:
+        account_url_suffix = "api/v1/get_pub_key"
+        headers = {"Authorization": f"Bearer {get_token()}"}
+        
+        response = requests.get(f"{server_url}{account_url_suffix}", headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        for key, value in data.items():
+            
+            return value
+        #return response.content
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting public key")
+        return None
+
+def upload_public_key(server_url:str, public_key:bytes):
+    """Function that uploads the generated public key to the endpoint specified in the 
+    account_url_suffix variable"""
+
+    # try:
+    account_url_suffix = "api/v1/post_pub_key"
+    headers = {"Authorization": f"Bearer {get_token()}"}
+    
+    print(type(public_key))
+    payload={
+        "pub_key" : public_key.decode("utf-8")
+    }
+    
+    response = requests.post(f"{server_url}{account_url_suffix}", json = payload,  headers=headers, timeout=10)
+    
+    data = response.json()
+    print("---------------------------")
+    print(f"{data}")
+    print("---------------------------")
+    # except requests.exceptions.RequestException as e:
+    #     print(f"Error uploading public key")
+    #     print(e)
+    #     return None   
+        
 def get_all_users(server_url:str)->None:
     """Development function to get all users in the database. Will be deprecated on app release."""
     account_url_suffix = "api/v1/users"
@@ -171,8 +212,8 @@ def register_user(server_url:str, username:str, user_email:str, user_password:st
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
-    #server_url = "http://127.0.0.1:8000/"
-    server_url = "http://143.42.200.202:8080/"
+    server_url = "http://127.0.0.1:8000/"
+    #server_url = "http://143.42.200.202:8080/"
     authenticated = False
 
     print()
@@ -239,6 +280,7 @@ def main():
                     print()
                     print("1. Get all users.")
                     print("2. Generate SSH Keypair and symmetrical key(needed to create and read messages/tweets)")
+                    print("3. Check public key)")
                     print("B to return to main menu")
                     
                     sub_choice = input(">> ")
@@ -254,8 +296,10 @@ def main():
                         else:    
                             public_key, private_key = generate_keypair()
                             save_private_key(private_key)
-                            upload_public_key(public_key, get_account_info(server_url)[0])
+                            upload_public_key(server_url, public_key)
                             generate_sym_key()
+                    elif sub_choice == "3":
+                        print(get_public_key(server_url))
                     elif sub_choice == "B" or sub_choice=="b":
                         print("Returning to main menu...")
                         break        
@@ -311,3 +355,5 @@ def main():
 if __name__ == "__main__":
     main()
 
+
+print(get_public_key("admin"))

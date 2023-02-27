@@ -22,6 +22,7 @@ deta = Deta(DETA_KEY)
 
 USERS = deta.Base("users")
 THOUGHTS = deta.Base("thoughts")
+KEYS = deta.Base("keys_db")
 
 #---PW ENCRYPT INIT---#
 pwd_context = CryptContext(schemes =["bcrypt"], deprecated="auto")
@@ -161,4 +162,36 @@ def create_thought(username:str, title:str, content:str )->None:
         logging.exception(error_message)
 
 
+#get the public key from the cloud
+def get_public_key(username:str)->Union[bytes, None]:
+    try:
+        retrieved_key = KEYS.get(f"{username}")["public key"]
+        new_public_key = retrieved_key.encode("utf-8")
+        return new_public_key
+    except Exception as error_message:
+        print(error_message)
+        return None
 
+
+def upload_public_key(public_key:bytes, username:str)->Union[bool, None]:
+    #public_key_str = public_key.decode("utf-8")
+    pub_key = {"key" : username, 
+               "public key" : public_key}
+    try:
+        KEYS.put(pub_key)
+    except Exception as error_message:
+        logging.exception(error_message)
+        
+    try:
+        retrieved_key = get_public_key(username)
+        print(type(retrieved_key))
+        print(type(public_key))
+        if public_key.encode('utf-8')==retrieved_key:
+            print("Public key uploaded succesfully")
+            return True
+        else:
+            print("Public key upload corrupted, please try again!")
+            return False
+    except Exception as error_message:
+        logging.exception(error_message)
+        return None

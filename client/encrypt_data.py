@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-from deta import Deta
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.fernet import Fernet
@@ -10,11 +9,6 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 load_dotenv()
-
-DETA_KEY = os.getenv("DETA_KEY")
-deta = Deta(DETA_KEY)
-
-KEYS = deta.Base("keys_db")
 
 # Generate a new RSA key pair for a client
 def generate_keypair()->tuple:
@@ -33,38 +27,6 @@ def generate_keypair()->tuple:
     )
     
     return public_key, private_key
-
-#get the public key from the cloud
-def get_public_key(username:str)->Union[bytes, None]:
-    try:
-        retrieved_key = KEYS.get(f"{username}")["public key"]
-        new_public_key = retrieved_key.encode("utf-8")
-        return new_public_key
-    except Exception as error_message:
-        print(error_message)
-        return None
-    
-#Upload public key to cloud
-def upload_public_key(public_key:bytes, username:str)->Union[bool, None]:
-    public_key_str = public_key.decode("utf-8")
-    pub_key = {"key" : username, 
-               "public key" : public_key_str}
-    try:
-        KEYS.put(pub_key)
-    except Exception as error_message:
-        logging.exception(error_message)
-        
-    try:
-        retrieved_key = get_public_key(username)
-        if public_key==retrieved_key:
-            print("Public key uploaded succesfully")
-            return True
-        else:
-            print("Public key upload corrupted, please try again!")
-            return False
-    except Exception as error_message:
-        logging.exception(error_message)
-        return None
 
 #Detect if a private key is available on your system        
 def detect_private_key()->bool:
@@ -116,7 +78,7 @@ def encrypt_message_symmetrical(message:str)-> bytes:
 
 def wrap_encrypt_sym_key(sym_key:bytes, username:str)->Union[str, bytes]:
     """Function to prepare the public key to encrypt the symmetric key, and then encrypt it"""
-    public_key = serialization.load_pem_public_key(get_public_key(username))
+    public_key = serialization.load_pem_public_key(get_public_key(username))#==To change to use the endpoint, drop the username
     # Encrypt the symmetric key with the client's public key
     encrypted_sim_key = public_key.encrypt(sym_key,padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
@@ -169,8 +131,6 @@ def generate_sym_key()->None:
         print("Symmetric key saved successfully")
     else:
         print("Symmetric key not saved successfully, please try again!")
-
-        
     
 def detect_sym_key()->bool:
     if os.path.exists(os.path.join(os.path.dirname(__file__), 'keys', 'message.key')):

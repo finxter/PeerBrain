@@ -10,9 +10,9 @@ import os
 import bcrypt
 
 #---LOCAL IMPORTS---#
-from models import User, Thought, Token, TokenData, UserInDB
+from models import User, Thought, Token, TokenData, UserInDB, PubKey
 from db import get_thoughts, get_users, create_user, get_user_by_email, get_user_by_username, create_thought, get_thought, \
-    get_friends_by_username, add_friend, gen_pw_hash, change_password
+    get_friends_by_username, add_friend, gen_pw_hash, change_password, get_public_key, upload_public_key
 
 #---LOAD ENV VARS---#
 load_dotenv()
@@ -160,4 +160,20 @@ async def create_new_thought(thought : Thought, current_user : User = Depends(ge
 async def read_users_me(current_user : User = Depends(get_current_active_user)):
     return current_user
 
+@app.get("/api/v1/get_pub_key")
+async def get_public_key_user( current_user : User = Depends(get_current_active_user)):
+    pub_key = get_public_key(current_user.username)
+    print(pub_key)
+    return {"PUBLIC KEY" : pub_key}
 
+@app.post("/api/v1/post_pub_key")
+async def post_public_key_user(pubkey : PubKey,  current_user : User = Depends(get_current_active_user)):
+    bytes_key = pubkey.pub_key
+    # pub_key = bytes_key.encode('utf-8')
+    
+    # pub_key = string_decoded_bytes_key
+    username = current_user.username
+    upload_public_key(bytes_key, username )
+    # print(type(pub_key))
+    # print(type(bytes_key))
+    return {"PUBLIC KEY" : "UPLOADED"}
