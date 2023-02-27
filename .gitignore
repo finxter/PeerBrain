@@ -9,3 +9,4 @@ client/todo.md
 .kanbn/index.md
 .kanbn/tasks/add-thought-to-client-app.md
 .kanbn/tasks/
+server/Dockerfile

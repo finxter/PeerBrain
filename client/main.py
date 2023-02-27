@@ -171,7 +171,8 @@ def register_user(server_url:str, username:str, user_email:str, user_password:st
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
-    server_url = "http://127.0.0.1:8000/"
+    #server_url = "http://127.0.0.1:8000/"
+    server_url = "http://143.42.200.202:8080/"
     authenticated = False
 
     print()
