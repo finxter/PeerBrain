@@ -11,3 +11,4 @@ client/todo.md
 .kanbn/tasks/
 server/Dockerfile
 server/endpoint_log.txt
+server/server_commands.md
