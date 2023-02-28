@@ -10,3 +10,4 @@ client/todo.md
 .kanbn/tasks/add-thought-to-client-app.md
 .kanbn/tasks/
 server/Dockerfile
+server/endpoint_log.txt

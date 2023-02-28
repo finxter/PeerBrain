@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from dotenv import load_dotenv
 import os
 import bcrypt
+import logging
 
 #---LOCAL IMPORTS---#
 from models import User, Thought, Token, TokenData, UserInDB, PubKey
@@ -27,7 +28,14 @@ oauth_2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 #---APP INIT---#
 app = FastAPI()
 
-
+#---LOG AND DEBUG---#
+def print_and_log(message, username):
+    logging.basicConfig(filename='endpoint_log.txt', level=logging.INFO)
+    current_datetime = datetime.utcnow()
+    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    log_message = f"{formatted_datetime} - {username} : {message}"
+    print(log_message)
+    logging.info(log_message)
 
 #---DB INIT FROM DB MODULE---#
 db = get_users()
@@ -104,6 +112,7 @@ async def login_for_access_token(form_data : OAuth2PasswordRequestForm = Depends
                                          headers={"WWW-Authenticate":"Bearer"}) 
     access_token_expires = timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub" : user.username}, expires_delta=access_token_expires)
+    print_and_log("logged in", user.username)
     return {"access_token" : access_token, "token_type" : "bearer"}
 
 @app.post("/api/v1/users")
@@ -117,6 +126,7 @@ async def register_user(user : User):
     # if get_user_by_email(email) or get_user_by_username(username):
     #     raise HTTPException(status_code=400, detail="A user with that username/email already exists.")
     create_user(username, email, user_password)
+    print_and_log("User account created", username)
     return {"Account creation" : "Successful"}
 
 #---AUTH ENDPOINTS---#
@@ -127,6 +137,7 @@ async def get_all_users(current_user : User = Depends(get_current_active_user)):
 
 @app.get("/api/v1/token-test")
 async def token_test(current_user : User = Depends(get_current_active_user)):
+    print_and_log("requested token and logged in", current_user.username)
     return {"Token Validity": "Verified"}
 
 @app.get("/api/v1/thoughts/{username}")
@@ -143,6 +154,7 @@ async def get_friends( current_user : User = Depends(get_current_active_user)):
 
 @app.post("/api/v1/friends/{friend_username}")
 async def add_friends( friend_username: str, current_user : User = Depends(get_current_active_user)):
+    print_and_log("added a friend", current_user.username)
     return add_friend(current_user.username, friend_username)
 
 @app.post("/api/v1/thoughts")
@@ -158,22 +170,19 @@ async def create_new_thought(thought : Thought, current_user : User = Depends(ge
 
 @app.get("/api/v1/me", response_model=User)
 async def read_users_me(current_user : User = Depends(get_current_active_user)):
+    print_and_log("consulted his user details", current_user.username)
     return current_user
 
 @app.get("/api/v1/get_pub_key")
 async def get_public_key_user( current_user : User = Depends(get_current_active_user)):
     pub_key = get_public_key(current_user.username)
-    print(pub_key)
+    print_and_log("requested his/her pubkey", current_user.username)
     return {"PUBLIC KEY" : pub_key}
 
 @app.post("/api/v1/post_pub_key")
 async def post_public_key_user(pubkey : PubKey,  current_user : User = Depends(get_current_active_user)):
     bytes_key = pubkey.pub_key
-    # pub_key = bytes_key.encode('utf-8')
-    
-    # pub_key = string_decoded_bytes_key
     username = current_user.username
     upload_public_key(bytes_key, username )
-    # print(type(pub_key))
-    # print(type(bytes_key))
+    print_and_log("uploaded his/her public key", current_user.username)
     return {"PUBLIC KEY" : "UPLOADED"}
