@@ -1,4 +1,5 @@
-"""This file will containt all the database logic for our server module. It will leverage the Deta Base NoSQL database api."""
+"""This file will contain all the database logic for our server module. It will leverage the Deta Base NoSQL database api."""
+
 from datetime import datetime
 import math
 from typing import Union
@@ -9,10 +10,6 @@ from uuid import uuid4
 from deta import Deta
 from dotenv import load_dotenv
 from passlib.context import CryptContext
-
-
-#---LOCAL IMPORTS---#
-from models import User, Thought
 
 load_dotenv()
 
@@ -34,13 +31,14 @@ def gen_pw_hash(pw:str)->str:
     return pwd_context.hash(pw)
 
 #---USER FUNCTIONS---#
-def get_users()->dict:
+def get_users() -> dict:
     """Function to return all users from our database"""
-    
-    user_dict = {}
-    for user in USERS.fetch().items:
-        user_dict[user["username"]]=user
-    return user_dict
+    try:
+        return {user["username"]: user for user in USERS.fetch().items}
+    except Exception as e:
+        # Log the error or handle it appropriately
+        print(f"Error fetching users: {e}")
+        return {}
 
 def get_user_by_username(username:str)->Union[dict, None]:
     """Function that returns a User object if it is in the database. If not it returns a JSON object with the 
@@ -229,3 +227,5 @@ def upload_public_key(public_key:bytes, username:str)->Union[bool, None]:
     except Exception as error_message:
         logging.exception(error_message)
         return None
+    
+print(USERS.get("3334e96d-da40-49f6-bcdd-455f0a9f53b1"))

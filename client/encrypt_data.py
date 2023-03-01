@@ -5,7 +5,9 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.fernet import Fernet
 from typing import Union
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+import logging
 
+import requests
 
 
 load_dotenv()
@@ -27,6 +29,13 @@ def generate_keypair()->tuple:
     )
     
     return public_key, private_key
+
+def load_sym_key()->bytes:
+     # Load the key from a file
+    key_path = os.path.join(os.path.dirname(__file__), 'keys', 'message.key')
+    with open(key_path, 'rb') as key_file:
+        key = key_file.read()
+        return key
 
 #Detect if a private key is available on your system        
 def detect_private_key()->bool:
@@ -67,7 +76,7 @@ def save_private_key(private_key)->None:
 
 def encrypt_message_symmetrical(message:str)-> bytes:
     try:
-        symmetric_key = load_symmetric_key()
+        symmetric_key = load_sym_key()
         # Create a Fernet object using the key
         fernet = Fernet(symmetric_key)
         # Encrypt the text string
@@ -76,24 +85,13 @@ def encrypt_message_symmetrical(message:str)-> bytes:
     except Exception as error_message:
         logging.exception(error_message)
 
-def wrap_encrypt_sym_key(sym_key:bytes, username:str)->Union[str, bytes]:
-    """Function to prepare the public key to encrypt the symmetric key, and then encrypt it"""
-    public_key = serialization.load_pem_public_key(get_public_key(username))#==To change to use the endpoint, drop the username
-    # Encrypt the symmetric key with the client's public key
-    encrypted_sim_key = public_key.encrypt(sym_key,padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        ))
-    return username, encrypted_sim_key
-
 def decrypt_message(encrypted_message, encryption_sim_key):
     private_key = serialization.load_pem_private_key(
     load_private_key(), password=None)
 
     # Decrypt the encrypted key using the private key
     decrypted_key = private_key.decrypt(
-        encrypted_key,
+        encryption_sim_key,
         padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
@@ -102,21 +100,14 @@ def decrypt_message(encrypted_message, encryption_sim_key):
     fernet = Fernet(decrypted_key)
 
     # Decrypt the encrypted message
-    decrypted_message = fernet.decrypt(encrypt_message)
+    decrypted_message = fernet.decrypt(encrypted_message)
 
     # Decode the decrypted message bytes to string
     decrypted_message = decrypted_message.decode()
 
     # Print the decrypted message
-    print(decrypted_message)
+    #print(decrypted_message)
     return decrypted_message
-
-def load_sym_key()->bytes:
-     # Load the key from a file
-    key_path = os.path.join(os.path.dirname(__file__), 'keys', 'message.key')
-    with open(key_path, 'rb') as key_file:
-        key = key_file.read()
-        return key
 
 def generate_sym_key()->None:
     # Generate a symmetric key
@@ -141,9 +132,6 @@ def detect_sym_key()->bool:
         return False
 
 
-
-
-    
 
 
 

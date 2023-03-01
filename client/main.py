@@ -5,9 +5,12 @@ import json
 import requests
 from typing import List, Union
 from uuid import uuid4
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from encrypt_data import generate_keypair, load_private_key, detect_private_key, \
-    save_private_key, encrypt_message_symmetrical, wrap_encrypt_sym_key, decrypt_message, generate_sym_key, load_sym_key, \
+    save_private_key, encrypt_message_symmetrical, decrypt_message, generate_sym_key, load_sym_key, \
         detect_sym_key
 
 #---VARIABLES---#
@@ -208,7 +211,18 @@ def register_user(server_url:str, username:str, user_email:str, user_password:st
         print("---------------------------")
         print(f"{key} {value}")
         print("---------------------------")
-        
+
+def wrap_encrypt_sym_key(sym_key:bytes, server_url:str)->Union[str, bytes]:
+    """Function to prepare the public key to encrypt the symmetric key, and then encrypt it"""
+    public_key = serialization.load_pem_public_key(get_public_key(server_url).encode('utf-8'))#==To change to use the endpoint, drop the username
+    # Encrypt the symmetric key with the client's public key
+    encrypted_sim_key = public_key.encrypt(sym_key,padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        ))
+    return encrypted_sim_key
+       
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
@@ -260,7 +274,7 @@ def main():
     #MENU SHOWING WHILE WE LOGGED IN OR AUTHENTICATED WITH TOKEN       
     if authenticated:        
         while True:
-            
+            username, email = get_account_info(server_url)
             print("\nMAIN MENU:")
             print()
             print("\nPlease choose an option:")
@@ -307,7 +321,7 @@ def main():
                         print("Invalid choice")        
             elif choice == "2":
                 while True:
-                    print("\ACCOUNT MENU:")
+                    print("\nACCOUNT MENU:")
                     print()
                     print("\nPlease choose an option:")
                     print()
@@ -318,15 +332,35 @@ def main():
                     print("B to return to main menu")
                     
                     sub_choice = input(">> ")
+                    
                     if sub_choice == "1":
-                        username, email = get_account_info(server_url)
                         print("---YOUR ACCOUNT DETAILS---")
                         print()
                         print(f"Username : {username}")
                         print(f"Email : {email}")
                     elif sub_choice == "2":
+                        
+                        
+                        
+                        print()
+                        print(f"POSTING AS >>  {username}")
+                        print()
                         print("Message creation function here")
-                        pass
+                        message = input("What would you like to post? : \n\nMESSAGE>>: ")
+                        sym_key, enc_mess = encrypt_message_symmetrical(message)
+                        print()
+                        
+                        print(f"SYMMETRIC KEY :  {sym_key}")
+                        print(f"ENCRYPTED MESSAGE :  {enc_mess}")
+                        
+                        encrypted_sym_key = wrap_encrypt_sym_key(sym_key, server_url)
+                        print()
+                        print(f"ENCRYPTED SYMMETRIC KEY :  {encrypted_sym_key}")
+                        
+                        decrypted_message = decrypt_message(enc_mess, encrypted_sym_key)
+                        print()
+                        print(f"DECRYPTED MESSAGE :  {decrypted_message}")
+                        
                     elif sub_choice == "3":
                         friend_username = input("Enter your friend's username:")
                         add_user_friends(server_url, friend_username)
@@ -356,4 +390,3 @@ if __name__ == "__main__":
     main()
 
 
-print(get_public_key("admin"))
