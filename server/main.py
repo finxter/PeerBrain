@@ -179,6 +179,12 @@ async def get_public_key_user( current_user : User = Depends(get_current_active_
     print_and_log("requested his/her pubkey", current_user.username)
     return {"PUBLIC KEY" : pub_key}
 
+@app.get("/api/v1/get_pub_key_friend/{friend_username}")
+async def get_public_key_friend(friend_username: str, current_user : User = Depends(get_current_active_user)):
+    pub_key = get_public_key(friend_username)
+    print_and_log("requested his/her pubkey", friend_username)
+    return {"PUBLIC KEY" : pub_key}
+
 @app.post("/api/v1/post_pub_key")
 async def post_public_key_user(pubkey : PubKey,  current_user : User = Depends(get_current_active_user)):
     bytes_key = pubkey.pub_key

@@ -228,4 +228,3 @@ def upload_public_key(public_key:bytes, username:str)->Union[bool, None]:
         logging.exception(error_message)
         return None
     
-print(USERS.get("3334e96d-da40-49f6-bcdd-455f0a9f53b1"))

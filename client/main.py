@@ -117,6 +117,26 @@ def get_public_key(server_url:str)->Union[bytes, None]:
         print(f"Error getting public key")
         return None
 
+def get_public_key_friend(server_url:str, friend_username:str)->Union[bytes, None]:
+    """Function that returns account public key for the endpoint specified in the 
+    account_url_suffix variable"""
+    try:
+        account_url_suffix = "api/v1/get_pub_key_friend/"
+        headers = {"Authorization": f"Bearer {get_token()}"}
+        
+        response = requests.get(f"{server_url}{account_url_suffix}{friend_username}", headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        for key, value in data.items():
+            
+            return value
+        #return response.content
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting public key")
+        return None
+
+
 def upload_public_key(server_url:str, public_key:bytes):
     """Function that uploads the generated public key to the endpoint specified in the 
     account_url_suffix variable"""
@@ -141,7 +161,7 @@ def upload_public_key(server_url:str, public_key:bytes):
     #     print(e)
     #     return None   
         
-def get_all_users(server_url:str)->None:
+def get_all_users(server_url:str)->tuple:
     """Development function to get all users in the database. Will be deprecated on app release."""
     account_url_suffix = "api/v1/users"
 
@@ -170,10 +190,12 @@ def get_user_friends(server_url:str)->None:
 
 
     print("---Friends---")
-   
+    usernames = []
     for key, value in data.items():
         print(key)
+        usernames.append(key)
         print(value)
+    return tuple(usernames)
 
 def add_user_friends(server_url:str, friend_username:str):
     """function to return a list of all user friends."""
@@ -212,22 +234,33 @@ def register_user(server_url:str, username:str, user_email:str, user_password:st
         print(f"{key} {value}")
         print("---------------------------")
 
-def wrap_encrypt_sym_key(sym_key:bytes, server_url:str)->Union[str, bytes]:
-    """Function to prepare the public key to encrypt the symmetric key, and then encrypt it"""
-    public_key = serialization.load_pem_public_key(get_public_key(server_url).encode('utf-8'))#==To change to use the endpoint, drop the username
-    # Encrypt the symmetric key with the client's public key
-    encrypted_sim_key = public_key.encrypt(sym_key,padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        ))
-    return encrypted_sim_key
+def wrap_encrypt_sym_key(sym_key:bytes, server_url:str, friend_username: Union[str, None] = None)->Union[str, bytes]:
+    """Function to prepare the public key to encrypt the symmetric key, and then encrypt it. The optional friend_username
+    argument is used to check if it is the users own key that needs encrypting or someone else's."""
+    if friend_username:
+        public_key = serialization.load_pem_public_key(get_public_key_friend(server_url, friend_username).encode('utf-8'))#==To change to use the endpoint, drop the username
+        # Encrypt the symmetric key with the client's public key
+        encrypted_sim_key = public_key.encrypt(sym_key,padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            ))
+        return encrypted_sim_key
+    else:    
+        public_key = serialization.load_pem_public_key(get_public_key(server_url).encode('utf-8'))#==To change to use the endpoint, drop the username
+        # Encrypt the symmetric key with the client's public key
+        encrypted_sim_key = public_key.encrypt(sym_key,padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            ))
+        return encrypted_sim_key
        
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
-    #server_url = "http://127.0.0.1:8000/"
-    server_url = "http://143.42.200.202:8080/"
+    server_url = "http://127.0.0.1:8000/"
+    #server_url = "http://143.42.200.202:8080/"
     authenticated = False
 
     print()
@@ -274,7 +307,9 @@ def main():
     #MENU SHOWING WHILE WE LOGGED IN OR AUTHENTICATED WITH TOKEN       
     if authenticated:        
         while True:
-            username, email = get_account_info(server_url)
+            username, email = get_account_info(server_url)#---Making current users username and email available to authenticated user
+            friends = get_user_friends(server_url)
+            
             print("\nMAIN MENU:")
             print()
             print("\nPlease choose an option:")
@@ -339,9 +374,7 @@ def main():
                         print(f"Username : {username}")
                         print(f"Email : {email}")
                     elif sub_choice == "2":
-                        
-                        
-                        
+                        #---MESSAGE POSTING CODE---#                       
                         print()
                         print(f"POSTING AS >>  {username}")
                         print()
@@ -353,13 +386,23 @@ def main():
                         print(f"SYMMETRIC KEY :  {sym_key}")
                         print(f"ENCRYPTED MESSAGE :  {enc_mess}")
                         
-                        encrypted_sym_key = wrap_encrypt_sym_key(sym_key, server_url)
-                        print()
-                        print(f"ENCRYPTED SYMMETRIC KEY :  {encrypted_sym_key}")
+                        user_key_dict = {}
                         
+                        encrypted_sym_key = wrap_encrypt_sym_key(sym_key, server_url)
+                        user_key_dict[username] = encrypted_sym_key
+                        print()
+                        print(f"ENCRYPTED USER SYMMETRIC KEY :  {encrypted_sym_key}")
+                                                
+                        for friend in friends:
+                           encrypted_sym_key_friend = wrap_encrypt_sym_key(sym_key, server_url, friend)
+                           user_key_dict[friend] = encrypted_sym_key_friend
+                           print()
+                           print(f"ENCRYPTED {friend} SYMMETRIC KEY :  {encrypted_sym_key_friend}")
+                        
+                                                
                         decrypted_message = decrypt_message(enc_mess, encrypted_sym_key)
                         print()
-                        print(f"DECRYPTED MESSAGE :  {decrypted_message}")
+                        print(f"DECRYPTED MESSAGE WITH USER PRIVATE KEY :  {decrypted_message}")
                         
                     elif sub_choice == "3":
                         friend_username = input("Enter your friend's username:")
