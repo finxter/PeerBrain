@@ -259,8 +259,8 @@ def wrap_encrypt_sym_key(sym_key:bytes, server_url:str, friend_username: Union[s
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
-    server_url = "http://127.0.0.1:8000/"
-    #server_url = "http://143.42.200.202:8080/"
+    #server_url = "http://127.0.0.1:8000/"
+    server_url = "http://143.42.200.202:8080/"
     authenticated = False
 
     print()
