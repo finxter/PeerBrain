@@ -12,7 +12,7 @@ import logging
 
 #---LOCAL IMPORTS---#
 from models import User, Thought, Token, TokenData, UserInDB, PubKey
-from db import get_thoughts, get_users, create_user, get_user_by_email, get_user_by_username, create_thought, get_thought, \
+from db import get_thoughts, get_users, create_user, get_user_by_email, get_user_by_username, create_thought, get_thoughts, \
     get_friends_by_username, add_friend, gen_pw_hash, change_password, get_public_key, upload_public_key
 
 #---LOAD ENV VARS---#
@@ -141,7 +141,7 @@ async def token_test(current_user : User = Depends(get_current_active_user)):
     return {"Token Validity": "Verified"}
 
 @app.get("/api/v1/thoughts/{username}")
-async def get_thoughts_for_user(username : str, current_user : User = Depends(get_current_active_user)):
+async def get_thoughts_for_user( username: str, current_user : User = Depends(get_current_active_user)):
     return get_thoughts(username)
 
 @app.get("/api/v1/thoughts/{query_str}")
@@ -160,10 +160,14 @@ async def add_friends( friend_username: str, current_user : User = Depends(get_c
 @app.post("/api/v1/thoughts")
 async def create_new_thought(thought : Thought, current_user : User = Depends(get_current_active_user)):
     #user_id = thought.user_id
+    username = thought.username
     title = thought.title
     content = thought.content
-    readers = thought.readers
-    
+    readers = [
+        {"username": reader.username, "encrypted_sym_key": reader.encrypted_sym_key}
+        for reader in thought.readers
+    ]
+    print(readers)
     create_thought(current_user.username, title, content, readers)
     
     return {"Thought" : "Successfully created!"}

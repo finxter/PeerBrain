@@ -17,7 +17,7 @@ class User(BaseModel): # pylint: disable=too-few-public-methods
 class Reader(BaseModel): # pylint: disable=too-few-public-methods
     """Helper class for the message creation process."""
     username: str or None = None
-    encrypted_sym_key: bytes or None = None
+    encrypted_sym_key: str or None = None
 
 class Thought(BaseModel): # pylint: disable=too-few-public-methods
     """Thoughts are Brainwave's equivalent of tweets. Their rating will determine popularity

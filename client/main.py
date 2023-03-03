@@ -3,6 +3,7 @@ import getpass
 import os
 import json
 import requests
+import base64
 from typing import List, Union
 from uuid import uuid4
 from cryptography.hazmat.primitives import serialization, hashes
@@ -98,6 +99,16 @@ def get_account_info(server_url:str)->None:
 
     return data['username'], data['email']
 
+def get_thoughts_for_user(server_url:str, username:str)->None:
+    """Function that returns account details for the endpoint specified in the 
+    account_url_suffix variable"""
+    account_url_suffix = "api/v1/thoughts"
+    headers = {"Authorization": f"Bearer {get_token()}"}
+    response = requests.get(f"{server_url}{account_url_suffix}/{username}", headers=headers, timeout=10)
+    data = response.json()
+
+    return json.loads(data)
+
 def get_public_key(server_url:str)->Union[bytes, None]:
     """Function that returns account public key for the endpoint specified in the 
     account_url_suffix variable"""
@@ -135,7 +146,6 @@ def get_public_key_friend(server_url:str, friend_username:str)->Union[bytes, Non
     except requests.exceptions.RequestException as e:
         print(f"Error getting public key")
         return None
-
 
 def upload_public_key(server_url:str, public_key:bytes):
     """Function that uploads the generated public key to the endpoint specified in the 
@@ -255,7 +265,31 @@ def wrap_encrypt_sym_key(sym_key:bytes, server_url:str, friend_username: Union[s
                 label=None
             ))
         return encrypted_sim_key
+
+def post_thought(server_url:str, username:str, title:str, encrypted_message:bytes, user_and_key_list:list):
+    """Function that uploads the Thought and its list of usernames and encrypted keys to the endpoint specified in the 
+    account_url_suffix variable"""
+
+    account_url_suffix = "api/v1/thoughts"
+    headers = {"Authorization": f"Bearer {get_token()}"}
+    
+    print(user_and_key_list)
+    
+    payload={
+        "username" : username,
+        "title" : title,
+        "content" : encrypted_message.decode("utf-8")       ,
+        "readers" : user_and_key_list
+    }
+    
        
+    response = requests.post(f"{server_url}{account_url_suffix}", json = payload,  headers=headers, timeout=10)
+    
+    # data = response.json()
+    # print("---------------------------")
+    # print(f"{data}")
+    # print("---------------------------")
+    
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
@@ -360,10 +394,11 @@ def main():
                     print()
                     print("\nPlease choose an option:")
                     print()
-                    print("1. Check your account details.")
+                    print("1. Check your account details")
                     print("2. Create a message")
-                    print("3. Add a friend")
-                    print("4. Check friends list")
+                    print("3. Show all messages")
+                    print("4. Add a friend")
+                    print("5. Check friends list")
                     print("B to return to main menu")
                     
                     sub_choice = input(">> ")
@@ -378,7 +413,7 @@ def main():
                         print()
                         print(f"POSTING AS >>  {username}")
                         print()
-                        print("Message creation function here")
+                        title = input("Please choose a title for your Thought: \n\n>>TITLE: ")                        
                         message = input("What would you like to post? : \n\nMESSAGE>>: ")
                         sym_key, enc_mess = encrypt_message_symmetrical(message)
                         print()
@@ -386,28 +421,42 @@ def main():
                         print(f"SYMMETRIC KEY :  {sym_key}")
                         print(f"ENCRYPTED MESSAGE :  {enc_mess}")
                         
-                        user_key_dict = {}
+                        user_key_list = []
                         
                         encrypted_sym_key = wrap_encrypt_sym_key(sym_key, server_url)
-                        user_key_dict[username] = encrypted_sym_key
+                        
+                        encrypted_sym_key_base64 = base64.b64encode(encrypted_sym_key).decode()
+                        user_key_list.append({"username" :username, "encrypted_sym_key" :encrypted_sym_key_base64})
                         print()
                         print(f"ENCRYPTED USER SYMMETRIC KEY :  {encrypted_sym_key}")
                                                 
                         for friend in friends:
-                           encrypted_sym_key_friend = wrap_encrypt_sym_key(sym_key, server_url, friend)
-                           user_key_dict[friend] = encrypted_sym_key_friend
-                           print()
-                           print(f"ENCRYPTED {friend} SYMMETRIC KEY :  {encrypted_sym_key_friend}")
-                        
-                                                
+                            encrypted_sym_key_friend = wrap_encrypt_sym_key(sym_key, server_url, friend)
+                            encrypted_sym_key_friend_base64 = base64.b64encode(encrypted_sym_key_friend).decode()
+                            user_key_list.append({"username" :friend, "encrypted_sym_key" :encrypted_sym_key_friend_base64})
+                           
+                            print()
+                            print(f"ENCRYPTED {friend} SYMMETRIC KEY :  {encrypted_sym_key_friend}")
+                            
+                        post_thought(server_url, username, title, enc_mess, user_key_list)                         
+                                     
                         decrypted_message = decrypt_message(enc_mess, encrypted_sym_key)
                         print()
                         print(f"DECRYPTED MESSAGE WITH USER PRIVATE KEY :  {decrypted_message}")
-                        
+                    
                     elif sub_choice == "3":
+                        for thought in get_thoughts_for_user(server_url, username):
+                            print(f"TITLE:  {thought['title']}")
+                                                       
+                            encrypted_sym_key = base64.b64decode(thought['encryption_info'])
+                            decrypted_message = decrypt_message(thought["content"].encode("utf-8"), encrypted_sym_key)
+                            print(f"MESSAGE:  { decrypted_message}")
+                            print()
+                            
+                    elif sub_choice == "4":
                         friend_username = input("Enter your friend's username:")
                         add_user_friends(server_url, friend_username)
-                    elif sub_choice == "4":
+                    elif sub_choice == "5":
                         get_user_friends(server_url)
                     elif sub_choice == "B" or sub_choice=="b":
                         print("Returning to main menu...")

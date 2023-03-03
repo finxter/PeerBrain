@@ -4,6 +4,7 @@ from datetime import datetime
 import math
 from typing import Union
 import os
+import json
 import logging
 from pprint import pprint #pylint: disable=unused-import
 from uuid import uuid4
@@ -169,21 +170,34 @@ def get_thoughts(username:str)->Union[dict, None]:
     """Function to find all thoughts created by a certain user. Will return a dictionary of all the Thought objects that have the usernames username
     provided."""
     try:
-        return THOUGHTS.fetch({"username" : username}).items
+        result_list_thougts = []
+        results = THOUGHTS.fetch().items
+        for thought in results:
+            # if username in thought["readers"]["username"]:
+            #     result_list_thougts.append(thought)
+            for reader in thought["readers"]:
+                if username in reader["username"]:
+                    result_list_thougts.append({"title":thought["title"], "content" : thought["content"], "encryption_info" : reader["encrypted_sym_key"]})
+                    
+        return json.dumps(result_list_thougts)
+        
     except Exception as error_message:
         logging.exception(error_message)
         return None
 
-def create_thought(username:str, title:str, content:str )->None:
+def create_thought(username:str, title:str, content:str, readers:list )->None:
     """Basic function to create a Thought. Will need refinement to handle encrypted data for the content field and probably an additional array
     to store all the versions of the encrypted symmetric key."""
     new_thought = {"username" : username,
                    "key" : str(uuid4()), 
                    "title" : title, 
                    "content" : content,
+                   "readers" : readers, 
                    "rating" : 0.0,
                    "creation_date": str(datetime.utcnow())
+                   
                    }
+    
     try:
         return THOUGHTS.put(new_thought)
     except Exception as error_message:
