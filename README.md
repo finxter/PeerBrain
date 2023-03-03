@@ -8,14 +8,22 @@ If you want to contribute, you can fork this repository and issue pull requests!
 
 ### Table of Contents  
 1. [How does the open-source workflow work?](#how-does-the-open-source-workflow-work)
-2. [Installation/Instructions](#installationinstructions)
-3. [Resources](#resources) 
+2. [Encryption Mechanism](#encryption-mechanism)
+3. [Installation/Instructions](#installationinstructions)
+4. [Resources](#resources) 
 
 
 ### How does the open-source workflow work?
 The open-source workflow is a process by which users can contribute to a project. It is typically done through a system like GitHub, where users can fork, or copy, a repository, make changes to it, and then submit a pull request. The project maintainers then review the changes and either accept or reject them. If accepted, the changes are merged into the main repository. This process allows for collaboration between users and for projects to be updated and improved quickly.
 
-
+## Encryption Mechanism
+1. Load symmetric key.
+2. Encrypt the user entered message using the symmetric key.
+3. Fetch the public key from the server.
+4. Encrypt the symmetric key using the public key.
+5. Decrypt the encrypted symmetric key using the private key.
+6. Decrypt the encrypted message using decrypted symmetric key.   
+This is encryption cycle for each message we write or read. 
 
 ## Installation/Instructions
 1. Clone the PeerBrain Repo to your local machine
