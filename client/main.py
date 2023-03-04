@@ -100,7 +100,7 @@ def get_account_info(server_url:str)->None:
     return data['username'], data['email']
 
 def get_thoughts_for_user(server_url:str, username:str)->None:
-    """Function that returns account details for the endpoint specified in the 
+    """Function that returns all thoughts that have the username in the reader's list for the endpoint specified in the 
     account_url_suffix variable"""
     account_url_suffix = "api/v1/thoughts"
     headers = {"Authorization": f"Bearer {get_token()}"}
@@ -293,8 +293,8 @@ def post_thought(server_url:str, username:str, title:str, encrypted_message:byte
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
-    #server_url = "http://127.0.0.1:8000/"
-    server_url = "http://143.42.200.202:8080/"
+    server_url = "http://127.0.0.1:8000/"
+    #server_url = "http://143.42.200.202:8080/"
     authenticated = False
 
     print()
@@ -395,10 +395,13 @@ def main():
                     print("\nPlease choose an option:")
                     print()
                     print("1. Check your account details")
+                    print("--------------------------------")
                     print("2. Create a message")
                     print("3. Show all messages")
+                    print("--------------------------------")
                     print("4. Add a friend")
                     print("5. Check friends list")
+                    print("--------------------------------")
                     print("B to return to main menu")
                     
                     sub_choice = input(">> ")
@@ -447,6 +450,9 @@ def main():
                     elif sub_choice == "3":
                         for thought in get_thoughts_for_user(server_url, username):
                             print(f"TITLE:  {thought['title']}")
+                            print()
+                            print(f"RATING:  { thought['rating']}")
+                            print()
                                                        
                             encrypted_sym_key = base64.b64decode(thought['encryption_info'])
                             decrypted_message = decrypt_message(thought["content"].encode("utf-8"), encrypted_sym_key)

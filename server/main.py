@@ -41,13 +41,11 @@ def print_and_log(message, username):
 db = get_users()
 
 #---CONNECTION SECURITY FUNCTIONS---#
-def verify_password(plain_text_pw, hash_pw):
+def verify_password(plain_text_pw:str, hash_pw:str)->bool:
+    """Returns True if password hash matches the plain text password. Returns False otherwise."""
     return pwd_context.verify(plain_text_pw, hash_pw)
 
-def verify_password_hashing(plain_password, hashed_password):
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-
-def get_user(db, username:str):
+def get_user(db:dict, username:str):
     if username in db:
         user_data = db[username]
         return UserInDB(**user_data)

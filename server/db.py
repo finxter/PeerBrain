@@ -167,8 +167,8 @@ def get_thought(query_str:str)->Union[dict, str, None]:
         return None
 
 def get_thoughts(username:str)->Union[dict, None]:
-    """Function to find all thoughts created by a certain user. Will return a dictionary of all the Thought objects that have the usernames username
-    provided."""
+    """Function to find all thoughts that have the given username in its list. It will return a dictionary of 
+    all the Thought objects that have the usernames username provided."""
     try:
         result_list_thougts = []
         results = THOUGHTS.fetch().items
@@ -177,7 +177,7 @@ def get_thoughts(username:str)->Union[dict, None]:
             #     result_list_thougts.append(thought)
             for reader in thought["readers"]:
                 if username in reader["username"]:
-                    result_list_thougts.append({"title":thought["title"], "content" : thought["content"], "encryption_info" : reader["encrypted_sym_key"]})
+                    result_list_thougts.append({"title":thought["title"], "content" : thought["content"], "rating" : thought["rating"], "encryption_info" : reader["encrypted_sym_key"]})
                     
         return json.dumps(result_list_thougts)
         
