@@ -298,9 +298,6 @@ def get_sym_key(server_url:str, password:str, friend_username:str):
        
     response = requests.post(f"{server_url}{account_url_suffix}", json = payload,  headers=headers, timeout=10)    
     data = response.json()
-    print("---------------------------")
-    print(f"{data}")
-    print("---------------------------")
     return data
 def main():
     """Display the main menu and prompt the user to choose an option."""    
@@ -445,20 +442,17 @@ def main():
                         friend_username = input("Please enter the username of the friend that you want to see messages from: \n\n")
                         
                         base_64_encr_sym_key = get_sym_key(server_url, user_password, friend_username)
-                        print(type(base_64_encr_sym_key))
                         encrypted_sym_key = base64.b64decode(base_64_encr_sym_key)
-                        print(type(encrypted_sym_key))
-                        
+                                                
                         for thought in get_thoughts_for_user(server_url, friend_username):
-                            print()
+                            print("-------------------------------------------------------")
                             print(f"TITLE:  {thought['title']}")
                             print()
                             print(f"RATING:  { thought['rating']}")
                             print()
                             decrypted_message = decrypt_message(thought["content"].encode("utf-8"), encrypted_sym_key)
                             print(f"MESSAGE:  { decrypted_message}")
-                            print()     
-                            
+                            print("-------------------------------------------------------")     
                             print()
                             
                     elif sub_choice == "4":

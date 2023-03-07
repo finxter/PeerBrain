@@ -280,7 +280,7 @@ def get_encrypted_sym_key(username: str, user_password, friend_username:str):
     }
     
     url = os.getenv("SYM_KEY_API_URL")
-    url_suffix = "api/v1/user_key"
+    url_suffix = "api/v1/user_keys"
     
     headers = {
     "Content-Type": "application/json",
@@ -288,7 +288,7 @@ def get_encrypted_sym_key(username: str, user_password, friend_username:str):
     "x-api-key": os.getenv("SYM_KEY_X_API_KEY")
     }
     
-    response = requests.get(f"{url}{url_suffix}", headers=headers, json=encrypted_sym_request)
+    response = requests.post(f"{url}{url_suffix}", headers=headers, json=encrypted_sym_request)
     data = response.json()
     if response.status_code == 200:
         print("Key received successfully from remote server.")

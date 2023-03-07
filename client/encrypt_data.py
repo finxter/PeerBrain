@@ -140,7 +140,6 @@ def decrypt_message(encrypted_message, encryption_sim_key):
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
             label=None))
-    print(decrypted_key)
     # Create a Fernet object with the symmetric key
     fernet = Fernet(decrypted_key)
 
@@ -151,7 +150,6 @@ def decrypt_message(encrypted_message, encryption_sim_key):
     decrypted_message = decrypted_message.decode()
 
     # Print the decrypted message
-    #print(decrypted_message)
     return decrypted_message
 
 def generate_sym_key()->None:
