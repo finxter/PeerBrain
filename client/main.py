@@ -302,8 +302,8 @@ def get_sym_key(server_url:str, password:str, friend_username:str):
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
-    server_url = "http://127.0.0.1:8000/"
-    #server_url = "shttps://peerbrain.teckhawk.be/""
+    #server_url = "http://127.0.0.1:8000/"
+    server_url = "shttps://peerbrain.teckhawk.be/"
     authenticated = False
 
     print()
