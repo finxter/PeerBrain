@@ -460,25 +460,3 @@ async def get_user_key_store(sym_key_req : SymKeyRequest, current_user : User = 
         return get_encrypted_sym_key(username, password, friend_username)
     else:
         return {"Message" : "Error in getting the encrypted key"}
-
-# @app.get("/api/v1/get_pub_key")#==>TO RETIRE?
-# async def get_public_key_user( current_user : User = Depends(get_current_active_user)):
-#     pub_key = get_public_key(current_user.username)
-#     print_and_log("requested his/her pubkey", current_user.username)
-#     return {"PUBLIC KEY" : pub_key}
-
-# @app.get("/api/v1/get_pub_key_friend/{friend_username}")#==>TO RETIRE?
-# async def get_public_key_friend(friend_username: str, current_user : User = Depends(get_current_active_user)):
-#     pub_key = get_public_key(friend_username)
-#     print_and_log("requested his/her pubkey", friend_username)
-#     return {"PUBLIC KEY" : pub_key}
-
-# @app.post("/api/v1/post_pub_key")#==>TO RETIRE?
-# async def post_public_key_user(pubkey : PubKey,  current_user : User = Depends(get_current_active_user)):
-#     bytes_key = pubkey.pub_key
-#     #symmetric_key = keystore.symmetric_key
-#     username = current_user.username
-    
-#     upload_public_key(bytes_key, username )
-#     print_and_log("uploaded his/her public key", current_user.username)
-#     return {"PUBLIC KEY" : "UPLOADED"}
