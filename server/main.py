@@ -456,6 +456,7 @@ async def get_user_key_store(sym_key_req : SymKeyRequest, current_user : User = 
     password = sym_key_req.user_password
     friend_username = sym_key_req.friend_username
     
+        
     if friend_username in get_friends_by_username(username).keys():
         return get_encrypted_sym_key(username, password, friend_username)
     else:
