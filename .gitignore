@@ -1,0 +1,22 @@
+.env
+token.json 
+.pem
+.gitignore
+client/private_key.pem
+client/keys/private_key.pem
+client/keys/message.key
+client/todo.md
+.kanbn/index.md
+.kanbn/tasks/add-thought-to-client-app.md
+.kanbn/tasks/
+server/Dockerfile
+server/endpoint_log.txt
+server/server_commands.md
+server/main.py
+client/backup-keys-dir/message.key
+client/keys/public_key.pem
+client/backup-keys-dir/private_key.pem
+client/backup-keys-dir/readme.txt
+client/backup-keys-dir/tata keys/message.key
+client/backup-keys-dir/tata keys/private_key.pem
+client/backup-keys-dir/tata keys/public_key.pem
