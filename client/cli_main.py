@@ -17,12 +17,13 @@ from client_functions import create_token, get_token, get_account_info, get_sym_
     add_user_friends, get_user_friends, get_all_users, get_thoughts_for_user, wrap_encrypt_sym_key, upload_keystore, \
         login_with_token, log_out
 
+from fastapi import HTTPException
 
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
-    #server_url = "http://127.0.0.1:8000/"
-    server_url = "https://peerbrain.teckhawk.be/"
+    server_url = "http://127.0.0.1:8000/"
+    #server_url = "https://peerbrain.teckhawk.be/"
     
     authenticated = False
 
@@ -44,11 +45,14 @@ def main():
             choice = input(">> ")
             
             if choice == "1":
+                
                 try:
-                    # username = input("Please enter your username: ")
-                    # password = getpass.getpass(prompt = "Please enter your password: ")
-                    login_with_token(server_url)
-                    authenticated = True
+                    if login_with_token(server_url):
+                        authenticated = True
+                    else:
+                        print("---")
+                        print("Inactive user!")
+                        print("---")
                 except KeyError:
                     print("---")
                     print("Username/Password incorrect")
