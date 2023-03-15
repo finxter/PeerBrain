@@ -14,7 +14,7 @@ from deta import Deta
 from dotenv import load_dotenv
 from passlib.context import CryptContext
 
-from email_code import html_mail
+from email_code import confirmation_mail, password_reset_mail
 
 load_dotenv()
 
@@ -26,6 +26,7 @@ USERS = deta.Base("users")
 THOUGHTS = deta.Base("thoughts")
 KEYS = deta.Base("keys_db")
 TEST_USERS = deta.Base("test_users")
+PW_RESET = deta.Base("pw_reset")
 
 
 #---PW ENCRYPT INIT---#
@@ -144,8 +145,34 @@ def create_user(username:str, email:str, pw_to_hash:str)->None:
                 "confirmation_token" : secret_token}
 
     try:
-        html_mail(email, username, secret_token)
+        confirmation_mail(email, username, secret_token)
         return USERS.put(new_user)
+    except Exception as error_message:
+        logging.exception(error_message)
+        return None
+
+def create_password_reset_token(username:str, email:str)->None:
+    
+    reset_token = secrets.token_hex(32)
+    
+    password_reset_object = {
+        "key" : username,
+        "reset_token" : reset_token
+    }
+    
+    try:
+        password_reset_mail(email, username, reset_token)
+        #Password token stays valid for 5 minutes, then it gets autowiped from the database.
+        return PW_RESET.put(password_reset_object, expire_in=300)
+    
+    except Exception as error_message:
+        logging.exception(error_message)
+        return None
+
+def get_password_token(username:str)->Union[dict, None]:
+    try:
+        return PW_RESET.get(username)
+        
     except Exception as error_message:
         logging.exception(error_message)
         return None

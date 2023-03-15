@@ -208,6 +208,8 @@ def main():
                         print("---------------------------")
                         print(f"Trying to add {friend_username} as a friend. RESULT : {add_friend_result}")
                         print("---------------------------")
+                        #reloading friends object after adding a friend
+                        friends = get_user_friends(server_url)
                     elif sub_choice == "5":
                         print()
                         print("---Friends---")
