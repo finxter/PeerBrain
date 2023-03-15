@@ -4,6 +4,7 @@ import os
 import json
 import requests
 import base64
+import argparse
 from typing import List, Union
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -21,9 +22,14 @@ from fastapi import HTTPException
 
 def main():
     """Display the main menu and prompt the user to choose an option."""    
-    
-    #server_url = "http://127.0.0.1:8000/"
-    server_url = "https://peerbrain.teckhawk.be/"
+    # python cli_main.py -s dev FOR DEV SERVER OR python cli_main.py FOR NORMAL USE
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument("-s", "--server", help="Dev or live server", type=str, default="live")
+    args = argParser.parse_args()
+    if args.server == "dev":
+        server_url = "http://127.0.0.1:8000/"
+    else:
+        server_url = "https://peerbrain.teckhawk.be/"  
     
     authenticated = False
 
