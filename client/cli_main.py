@@ -22,8 +22,8 @@ from fastapi import HTTPException
 def main():
     """Display the main menu and prompt the user to choose an option."""    
     
-    server_url = "http://127.0.0.1:8000/"
-    #server_url = "https://peerbrain.teckhawk.be/"
+    #server_url = "http://127.0.0.1:8000/"
+    server_url = "https://peerbrain.teckhawk.be/"
     
     authenticated = False
 

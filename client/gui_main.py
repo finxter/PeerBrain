@@ -23,8 +23,8 @@ from client_functions import check_token, login, log_out
 
 class PeerbrainApp(MDApp):
     
-    #server_url = StringProperty('https://peerbrain.teckhawk.be/')
-    server_url = StringProperty('http://127.0.0.1:8000/')
+    server_url = StringProperty('https://peerbrain.teckhawk.be/')
+    #server_url = StringProperty('http://127.0.0.1:8000/')
                
     def build(self):
         
