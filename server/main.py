@@ -310,20 +310,54 @@ async def reset_user_password(username:str, token:str):
         html_content = f"""
         <html>
             <head>
-                <title>Reset Password:</title>
-                
-            </head>
-            <body>
-                <form action="/{RESET_PASSWORD_ROUTE}/submit" method="post">
-                    <input type= "hidden" id = "username" name = "username" value = "{username}">
-                    <input type= "hidden" id = "token" name = "token" value = "{token}">
-                    <label for="new_password">New Password:</label>
-                    <input type="password" id="new_password" name="new_password"><br><br>
-                    <label for="confirm_password">Confirm Password:</label>
-                    <input type="password" id="confirm_password" name="confirm_password"><br><br>
-                    <input type="submit" value="Submit">
-                </form>
-            </body>
+    
+            <meta charset="utf-8">
+            <title>PeerBrain</title>
+            <meta name="viewport" content="width=device-width, initial-scale=2.0, user-scalable=0, minimal-ui">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+            <link rel="stylesheet" href="https://appsrv1-147a1.kxcdn.com/dattaable/plugins/animation/css/animate.min.css">
+            <link rel="stylesheet" href="https://appsrv1-147a1.kxcdn.com/dattaable/css/style.css">
+
+            
+
+        </head>
+
+        <body>
+            
+            
+            <div class="auth-wrapper">
+                <div class="auth-content">
+                    <div class="auth-bg">
+                        <span class="r"></span>
+                        <span class="r s"></span>
+                        <span class="r s"></span>
+                        <span class="r"></span>
+                    </div>
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <p class="mb-0 text-muted disabled"><a href="" class="large">Peer Brain</a></p>
+                            <div>
+                                <p class="mb-0 text-muted disabled"><a href="" disabled>Password Reset</a></p>
+                                    <form action="/{RESET_PASSWORD_ROUTE}/submit" method="post">
+                                        <input type= "hidden" id = "username" name = "username" value = "{username}">
+                                        <input type= "hidden" id = "token" name = "token" value = "{token}">
+                                        <label for="fname">New Password:</label><br>
+                                        <input type="password" id="new_password" name="new_password" minlength="8" required><br>
+                                        <label for="lname">Confirm Password:</label><br>
+                                        <input type="password" id="confirm_password" name="confirm_password" minlength="8" required><br><br>
+                                        <input type="submit" value="Submit">
+                                    </form> 
+                            </div>
+                            <br />
+                            <br />
+                            <p class="mb-0 text-muted"> <a href="https://github.com/shandralor/PeerBrain" >GitHub</a></p>
+                            <br />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
                 </html>
         """.format(
             new_password = html.escape(""),
