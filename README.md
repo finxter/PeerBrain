@@ -16,9 +16,9 @@ If you want to contribute, you can fork this repository and issue pull requests!
 ### Updates
 
 **2023/03/15**
--Code clean-up
--User account creation now requires email verification before allowing you to login
--Password reset functionality has been added
+* Code clean-up
+* User account creation now requires email verification before allowing you to login
+* Password reset functionality has been added
 
 
 ### How does the open-source workflow work?
